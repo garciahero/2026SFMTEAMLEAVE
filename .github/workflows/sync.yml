@@ -16,7 +16,7 @@ jobs:
       - name: Download HTML from Google Drive
         run: |
           # 請把下方的【你的GoogleDrive檔案ID】換成你在第一步複製的那串 ID
-          curl -L -o index.html "https://google.com/id=QFKdJSxiwfTH61kd1PF5LMP0"
+          curl -L -o index.html "https://google.com/id=13pC-QFKdJSxiwfTH61kd1PF5LMP0-L8b"
 
       - name: Commit and Push changes
         run: |
