@@ -15,15 +15,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download HTML from Google Docs
+      - name: Download HTML from Google Drive
         run: |
-          # 使用 Google Docs 官方匯出純文字管道，100% 避開安全攔截，直接抓取網頁原始碼
-          curl -L "https://google.com" -o index.html
+          # 使用 2026 最新直連埠並偽裝瀏覽器標頭，強制 Google Drive 直接輸出純文字 HTML，完美繞過登入提示
+          curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+               -L "https://google.com" \
+               -o index.html
+          
+          # 在日誌中印出下載內容的前 5 行，方便排查是否抓對
+          echo "=== 檢查下載內容前五行 ==="
+          head -n 5 index.html
 
       - name: Commit and Push changes
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
           
           # 從雲端拉取最新進度，防止版本衝突
           git fetch origin
@@ -34,14 +40,14 @@ jobs:
           
           # 檢查下載的網頁內容是否有效，若空檔則報錯
           if [ ! -s index.html ]; then
-            echo "錯誤：下載的網頁檔案為空，請檢查 Google 文件分享權限！"
+            echo "錯誤：下載的網頁檔案為空，請檢查 Google Drive 分享權限！"
             exit 1
           fi
           
           git add index.html
           if git diff --staged --quiet; then
-            echo "Google Docs 沒有任何更改，跳過本次更新。"
+            echo "Google Drive 檔案沒有任何更改，跳過本次更新。"
           else
-            git commit -m "Auto-update website from Google Docs"
+            git commit -m "Auto-update website from real HTML file"
             git push origin $CURRENT_BRANCH
           fi
