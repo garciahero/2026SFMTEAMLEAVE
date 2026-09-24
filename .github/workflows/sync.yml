@@ -1,0 +1,27 @@
+name: Sync HTML from Google Drive
+
+on:
+  schedule:
+    # 這裡代表每小時的第 0 分鐘，GitHub 會自動在雲端執行一次更新
+    - cron: '0 * * * *'
+  workflow_dispatch: # 允許你隨時手動點擊按鈕「立刻更新」
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download HTML from Google Drive
+        run: |
+          # 請把下方的【你的GoogleDrive檔案ID】換成你在第一步複製的那串 ID
+          curl -L -o index.html "https://google.com/id=QFKdJSxiwfTH61kd1PF5LMP0"
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add index.html
+          # 檢查檔案是否有變動，有變動才提交更新
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update HTML from Google Drive" && git push)
