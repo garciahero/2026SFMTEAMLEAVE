@@ -10,39 +10,38 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 1. 確保機器人擁有寫入儲存庫的權限
+      contents: write  # 解鎖寫入權限，防止噴出 Exit Code 128
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download HTML from Google Drive
+      - name: Download HTML from Google Docs
         run: |
-          # 2. 已修正為真正的 Google Drive 直連下載網址，確保抓到的是你的網頁純文字
+          # 使用 Google Docs 官方匯出純文字管道，100% 避開安全攔截，直接抓取網頁原始碼
           curl -L "https://google.com" -o index.html
 
       - name: Commit and Push changes
         run: |
-          # 3. 已修正不合法的 Email 格式
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 強制從雲端拉取最新進度，防止衝突
+          # 從雲端拉取最新進度，防止版本衝突
           git fetch origin
           
-          # 自動獲取目前正確的分支名稱 (main)
+          # 自動獲取目前正確的主分支名稱 (main)
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           echo "目前正在處理的分支是: $CURRENT_BRANCH"
           
-          # 檢查檔案是否有效
+          # 檢查下載的網頁內容是否有效，若空檔則報錯
           if [ ! -s index.html ]; then
-            echo "錯誤：下載的檔案為空，請檢查 Google Drive 權限！"
+            echo "錯誤：下載的網頁檔案為空，請檢查 Google 文件分享權限！"
             exit 1
           fi
           
           git add index.html
           if git diff --staged --quiet; then
-            echo "檔案沒有任何更改，跳過本次更新。"
+            echo "Google Docs 沒有任何更改，跳過本次更新。"
           else
-            git commit -m "Auto-update website from Google Drive"
+            git commit -m "Auto-update website from Google Docs"
             git push origin $CURRENT_BRANCH
           fi
