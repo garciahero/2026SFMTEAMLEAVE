@@ -20,8 +20,27 @@ jobs:
 
       - name: Commit and Push changes
         run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          
+          # 1. 強制從雲端拉取最新進度，防止衝突
+          git fetch origin
+          
+          # 2. 自動獲取目前正確的分支名稱 (可能是 main 或 master)
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "目前正在處理的分支是: $CURRENT_BRANCH"
+          
+          # 3. 檢查檔案是否有變動
+          if [ ! -s index.html ]; then
+            echo "錯誤：下載的檔案為空，請檢查 Google Drive 權限！"
+            exit 1
+          fi
+          
           git add index.html
-          # 檢查檔案是否有變動，有變動才提交更新
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update HTML from Google Drive" && git push)
+          if git diff --staged --quiet; then
+            echo "檔案沒有任何更改，跳過本次更新。"
+          else
+            git commit -m "Auto-update website from Google Drive"
+            # 4. 動態推送到正確的分支
+            git push origin $CURRENT_BRANCH
+          fi
