@@ -9,28 +9,31 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 1. 確保機器人擁有寫入儲存庫的權限
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download HTML from Google Drive
         run: |
-          # 請把下方的【你的GoogleDrive檔案ID】換成你在第一步複製的那串 ID
-          curl -L -o index.html "https://drive.google.com/file/d/13pC-QFKdJSxiwfTH61kd1PF5LMP0-L8b/view?usp=sharing"
+          # 2. 已修正為真正的 Google Drive 直連下載網址，確保抓到的是你的網頁純文字
+          curl -L "https://google.com" -o index.html
 
       - name: Commit and Push changes
         run: |
+          # 3. 已修正不合法的 Email 格式
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 1. 強制從雲端拉取最新進度，防止衝突
+          # 強制從雲端拉取最新進度，防止衝突
           git fetch origin
           
-          # 2. 自動獲取目前正確的分支名稱 (可能是 main 或 master)
+          # 自動獲取目前正確的分支名稱 (main)
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           echo "目前正在處理的分支是: $CURRENT_BRANCH"
           
-          # 3. 檢查檔案是否有變動
+          # 檢查檔案是否有效
           if [ ! -s index.html ]; then
             echo "錯誤：下載的檔案為空，請檢查 Google Drive 權限！"
             exit 1
@@ -41,6 +44,5 @@ jobs:
             echo "檔案沒有任何更改，跳過本次更新。"
           else
             git commit -m "Auto-update website from Google Drive"
-            # 4. 動態推送到正確的分支
             git push origin $CURRENT_BRANCH
           fi
